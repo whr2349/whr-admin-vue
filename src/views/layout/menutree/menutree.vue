@@ -3,9 +3,9 @@
             class="el-menu-vertical-demo"
             :default-active="defaultActive"
     >
-        <template v-for="item in menu">
-            <submenu v-if="item.children.length>0" :menu="item" :index="item.route"></submenu>
-            <el-menu-item v-else :index="item.route" @click="goto(item.route)">
+        <template v-for="(item,index_0) in menu">
+            <submenu v-if="item.children.length>0" :menu="item" :index="item.route" :key="index_0"></submenu>
+            <el-menu-item v-else :index="item.route" @click="goto(item.route)" :key="index_0">
                 <i :class="item.icon"></i>
                 <span slot="title">{{item.menu_name}}</span>
             </el-menu-item>
