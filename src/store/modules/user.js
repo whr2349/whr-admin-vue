@@ -1,5 +1,6 @@
 import { Message } from 'element-ui'
 import { login } from "@/http/api";
+import {deTree} from "../../utils/utils";
 
 const user = {
     namespaced: true,
@@ -21,14 +22,23 @@ const user = {
     },
 
     actions: {
-        // 登录
+        /**
+         * 用户登录
+         * @param commit
+         * @param userInfo
+         * @returns {Promise<any>}
+         */
         login({ commit }, userInfo) {
             return new Promise((resolve, reject) => {
                 login(userInfo).then(res => {
+                    console.log(res)
                     if (res.code == 0) {
                         commit('SET_TOKEN', res.data.token)
                         commit('SET_USERINFO', res.data.user)
                         commit('SET_MENUS', res.data.menus)
+                        console.log(res.data.menus)
+                        let expandeTreeData = deTree(res.data.menus);
+                        console.log("expandeTreeData",expandeTreeData);
                         localStorage.setItem('Authorization', res.data.token);
                         localStorage.setItem('userInfo', JSON.stringify(res.data.user));
                         localStorage.setItem('menus', JSON.stringify(res.data.menus));
@@ -42,14 +52,17 @@ const user = {
                 })
             })
         },
-        //获取本地信息
+        /**
+         * 获取本地存储信息，更新store
+         * @param commit
+         */
         getLocalUser({ commit }) {
             let token = localStorage.getItem('Authorization') ? localStorage.getItem('Authorization') : "";
             let userInfo = localStorage.getItem('userInfo') ? localStorage.getItem('userInfo') : {};
             let menus = localStorage.getItem('menus') ? localStorage.getItem('menus') : {};
             commit('SET_TOKEN', token)
-            commit('SET_USERINFO', JSON.parse(userInfo))
-            commit('SET_MENUS', JSON.parse(menus))
+            commit('SET_USERINFO', JSON.parse(JSON.stringify(userInfo)))
+            commit('SET_MENUS', JSON.parse(JSON.stringify(menus)))
         },
 
         // 获取用户信息
