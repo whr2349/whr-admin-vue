@@ -18,8 +18,8 @@
                             :size="45"
                     ></el-avatar>
                     <div style="text-align:left;margin-left:15px">
-                        <div style="margin-bottom:8px">{{user.user_name}}</div>
-                        <div style="color:#9a9a9a">部门：{{user.branch}}</div>
+                        <div style="margin-bottom:8px">{{userInfo.user_name}}</div>
+                        <div style="color:#9a9a9a">部门：{{userInfo.branch}}</div>
                     </div>
                 </div>
             </div>
@@ -60,19 +60,21 @@
     import prosess from "@/views/layout/process"
     import menutree from "./layout/menutree/menutree"
     import PubSub from "pubsub-js"
+    import { mapGetters } from 'vuex'
     export default {
         components: {
             prosess,menutree
         },
         data() {
             return {
-                user: this.$store.state.user.userInfo,
-                menus: this.$store.state.user.menus,
                 somenu:{},
-
             }
         },
         computed: {
+            ...mapGetters([
+                'userInfo',
+                'menus',
+            ]),
             sidemenu(){
                 return this.somenu.children
             },
@@ -80,6 +82,7 @@
             defaultActive(){
                 return this.menus[0].route
             }
+
         },
         mounted(){
             this.toSideMenu(this.menus[0]);

@@ -1,6 +1,6 @@
 import { Message } from 'element-ui'
 import { login } from "@/http/api";
-import {deTree} from "../../utils/utils";
+import {deTree , toJSON} from "../../utils/utils";
 
 const user = {
     namespaced: true,
@@ -8,6 +8,7 @@ const user = {
         userInfo: {},
         token: "",
         menus:[],
+        route:[],
     }),
     mutations: {
         SET_USERINFO: (state, userInfo) => {
@@ -18,6 +19,9 @@ const user = {
         },
         SET_MENUS:(state, menus) => {
             state.menus = menus
+        },
+        SET_ROUTE:(state, route) => {
+            state.route = route
         },
     },
 
@@ -33,15 +37,15 @@ const user = {
                 login(userInfo).then(res => {
                     console.log(res)
                     if (res.code == 0) {
-                        commit('SET_TOKEN', res.data.token)
-                        commit('SET_USERINFO', res.data.user)
-                        commit('SET_MENUS', res.data.menus)
-                        console.log(res.data.menus)
-                        let expandeTreeData = deTree(res.data.menus);
-                        console.log("expandeTreeData",expandeTreeData);
+                        let route = deTree(res.data.route);
+                        commit('SET_TOKEN', res.data.token);
+                        commit('SET_USERINFO', res.data.user);
+                        commit('SET_MENUS', res.data.menus);
+                        commit('SET_ROUTE', route);
                         localStorage.setItem('Authorization', res.data.token);
                         localStorage.setItem('userInfo', JSON.stringify(res.data.user));
                         localStorage.setItem('menus', JSON.stringify(res.data.menus));
+                        localStorage.setItem('route', JSON.stringify(route));
                         Message.success(res.message);
                     } else {
                         Message.warning(res.message);
@@ -59,10 +63,12 @@ const user = {
         getLocalUser({ commit }) {
             let token = localStorage.getItem('Authorization') ? localStorage.getItem('Authorization') : "";
             let userInfo = localStorage.getItem('userInfo') ? localStorage.getItem('userInfo') : {};
-            let menus = localStorage.getItem('menus') ? localStorage.getItem('menus') : {};
+            let menus = localStorage.getItem('menus') ? localStorage.getItem('menus') : [];
+            let route = localStorage.getItem('route') ? localStorage.getItem('route') : [];
             commit('SET_TOKEN', token)
-            commit('SET_USERINFO', JSON.parse(JSON.stringify(userInfo)))
-            commit('SET_MENUS', JSON.parse(JSON.stringify(menus)))
+            commit('SET_USERINFO', toJSON(userInfo))
+            commit('SET_MENUS', toJSON(menus))
+            commit('SET_ROUTE', toJSON(route))
         },
 
         // 获取用户信息
