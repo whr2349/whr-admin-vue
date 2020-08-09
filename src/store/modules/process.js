@@ -4,7 +4,7 @@ export default {
         list: [
             {
                 label: '首页',
-                value: '/',
+                value: '/index/home',
                 active: true
             },
         ]
@@ -45,7 +45,7 @@ export default {
             state.list = [
                 {
                     label: '首页',
-                    value: '/',
+                    value: '/index/home',
                     active: true
                 }
             ];

@@ -100,7 +100,7 @@ export default {
 	},
 
 	methods: {
-		...mapMutations(["ADD_PROCESS", "DEL_PROCESS", "SET_PROCESS"]),
+		...mapMutations("process",["ADD_PROCESS", "DEL_PROCESS", "SET_PROCESS"]),
 
 		onTap(e, item) {
 			this.isHit = item.active;

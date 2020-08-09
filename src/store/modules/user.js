@@ -1,14 +1,19 @@
-import { Message } from 'element-ui'
-import { login } from "@/http/api";
-import {deTree , toJSON} from "../../utils/utils";
+import {Message} from 'element-ui'
+import {login} from "@/http/api"
+import Home from "@/views/home/home.vue"
+import {_CONSTANTS_ROUTERS, _CONSTANTSMAIN_ROUTERS} from "@/router/index.js"
+import router from "@/router/index.js"
+import {deTree ,toJSON} from "../../utils/utils"
+import store from "../index";
 
 const user = {
     namespaced: true,
     state: () => ({
         userInfo: {},
         token: "",
-        menus:[],
-        route:[],
+        menus: [],
+        route: _CONSTANTS_ROUTERS,
+        addRouters: []
     }),
     mutations: {
         SET_USERINFO: (state, userInfo) => {
@@ -17,12 +22,23 @@ const user = {
         SET_TOKEN: (state, token) => {
             state.token = token
         },
-        SET_MENUS:(state, menus) => {
+        SET_MENUS: (state, menus) => {
             state.menus = menus
         },
-        SET_ROUTE:(state, route) => {
-            state.route = route
+        SET_ROUTE: (state, route) => {
+            state.route  = route;
         },
+        SET_ADDROUTERS: (state, route) => {
+            console.log("_CONSTANTSMAIN_ROUTERS:",_CONSTANTSMAIN_ROUTERS);
+
+            for(let i of route){
+                _CONSTANTSMAIN_ROUTERS.children.push(i)
+            }
+            state.addRouters.push(_CONSTANTSMAIN_ROUTERS);
+            console.log(" state.addRouters:", state.addRouters);
+            // router.options.routes.push(state.addRouters);
+            router.addRoutes(state.addRouters);
+        }
     },
 
     actions: {
@@ -32,7 +48,7 @@ const user = {
          * @param userInfo
          * @returns {Promise<any>}
          */
-        login({ commit }, userInfo) {
+        login({commit}, userInfo) {
             return new Promise((resolve, reject) => {
                 login(userInfo).then(res => {
                     console.log(res)
@@ -42,6 +58,11 @@ const user = {
                         commit('SET_USERINFO', res.data.user);
                         commit('SET_MENUS', res.data.menus);
                         commit('SET_ROUTE', route);
+                        //
+                        debugger
+                        let asyncRouters = filterAsyncRouter(route);
+                        commit("SET_ADDROUTERS", asyncRouters);
+
                         localStorage.setItem('Authorization', res.data.token);
                         localStorage.setItem('userInfo', JSON.stringify(res.data.user));
                         localStorage.setItem('menus', JSON.stringify(res.data.menus));
@@ -60,19 +81,21 @@ const user = {
          * 获取本地存储信息，更新store
          * @param commit
          */
-        getLocalUser({ commit }) {
+        getLocalUser({commit}) {
             let token = localStorage.getItem('Authorization') ? localStorage.getItem('Authorization') : "";
             let userInfo = localStorage.getItem('userInfo') ? localStorage.getItem('userInfo') : {};
             let menus = localStorage.getItem('menus') ? localStorage.getItem('menus') : [];
             let route = localStorage.getItem('route') ? localStorage.getItem('route') : [];
             commit('SET_TOKEN', token)
-            commit('SET_USERINFO', toJSON(userInfo))
-            commit('SET_MENUS', toJSON(menus))
-            commit('SET_ROUTE', toJSON(route))
+            commit('SET_USERINFO', JSON.parse(userInfo))
+            commit('SET_MENUS', JSON.parse(menus))
+            commit('SET_ROUTE', JSON.parse(route))
+            let asyncRouters = filterAsyncRouter(JSON.parse(route));
+            commit("SET_ADDROUTERS", asyncRouters);
         },
 
         // 获取用户信息
-        GetUserInfo({ commit, state }) {
+        GetUserInfo({commit, state}) {
             return new Promise((resolve, reject) => {
                 getUserInfo(state.token).then(response => {
                     if (!response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
@@ -105,7 +128,7 @@ const user = {
         // },
 
         // 登出
-        LogOut({ commit, state }) {
+        LogOut({commit, state}) {
             return new Promise((resolve, reject) => {
                 logout(state.token).then(() => {
                     commit('SET_TOKEN', '')
@@ -119,7 +142,7 @@ const user = {
         },
 
         // 前端 登出
-        FedLogOut({ commit }) {
+        FedLogOut({commit}) {
             return new Promise(resolve => {
                 commit('SET_TOKEN', '')
                 removeToken()
@@ -128,7 +151,7 @@ const user = {
         },
 
         // 动态修改权限
-        ChangeRoles({ commit }, role) {
+        ChangeRoles({commit}, role) {
             return new Promise(resolve => {
                 commit('SET_TOKEN', role)
                 setToken(role)
@@ -143,6 +166,37 @@ const user = {
             })
         }
     }
+}
+
+function filterAsyncRouter(routers) {
+    // 遍历后台传来的路由字符串，转换为组件对象
+    let accessedRouters = routers.map(router => {
+        let a = {}
+        a.path = router.path
+        a.name = router.path
+        if (router.meta) {
+            // 默认图标处理
+            a.meta.icon = router.meta.icon ? router.meta.icon : "component";
+        }
+        if (router.component === "home") {
+            // Main组件特殊处理
+            a.component = Home;
+        } else {
+            //处理组件---重点
+            a.component = loadView(router.path);
+        }
+        //存在子集
+        if (router.children && router.children.length) {
+            a.children = filterAsyncRouter(router.children);
+        }
+
+        return a;
+    });
+    return accessedRouters;
+}
+
+function loadView(view) {
+    return () => import(`@/views/${view}.vue`);
 }
 
 export default user

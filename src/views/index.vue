@@ -24,18 +24,18 @@
                 </div>
             </div>
             <div class="whr-side-menu">
-                <menutree :menu="sidemenu"></menutree>
+                <menutree :menu="somenu"></menutree>
             </div>
         </div>
         <div class="whr-wrapper-right">
             <div class="whr-wrapper-right-heard">
                 <div class="whr-right-menu">
                     <el-menu
-                            :default-active="defaultActive"
                             class="el-menu-demo"
                             mode="horizontal"
                     >
-                        <el-menu-item :index="item.route" v-for="(item,index) in menus" :key="index" @click="toSideMenu(item)">
+                        <el-menu-item :index="item.route" v-for="(item,index) in menus" :key="index"
+                                      @click="toSideMenu(item.children)">
                             <template slot="title"><i :class="item.icon"></i>{{item.menu_name}}</template>
                         </el-menu-item>
 
@@ -60,14 +60,15 @@
     import prosess from "@/views/layout/process"
     import menutree from "./layout/menutree/menutree"
     import PubSub from "pubsub-js"
-    import { mapGetters } from 'vuex'
+    import {mapGetters} from 'vuex'
+
     export default {
         components: {
-            prosess,menutree
+            prosess, menutree
         },
         data() {
             return {
-                somenu:{},
+                somenu: {},
             }
         },
         computed: {
@@ -75,23 +76,19 @@
                 'userInfo',
                 'menus',
             ]),
-            sidemenu(){
-                return this.somenu.children
-            },
 
-            defaultActive(){
-                return this.menus[0].route
-            }
 
         },
-        mounted(){
-            this.toSideMenu(this.menus[0]);
-            PubSub.subscribe("gotuRouter", (msg,data)=> {
+        mounted() {
+            PubSub.subscribe("gotuRouter", (msg, data) => {
+                debugger
                 this.$router.push(data)
             })
+            this.toSideMenu(this.menus[0].children);
+
         },
-        methods:{
-            toSideMenu(menu){
+        methods: {
+            toSideMenu(menu) {
                 this.somenu = menu;
             }
         }

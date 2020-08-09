@@ -6,7 +6,10 @@
         </template>
         <template v-for="(item,index_0) in menu.children" >
             <submenu v-if="item.children.length>0" :menu="item.children" :index="item.route" :key="index_0"></submenu>
-            <el-menu-item v-else :index="item.route" :key="index_0">{{item.menu_name}}</el-menu-item>
+            <el-menu-item v-else :index="item.route"  :key="index_0">
+                <i :class="item.icon"></i>
+                <span slot="title">{{item.menu_name}}</span>
+            </el-menu-item>
         </template>
     </el-submenu>
 </template>
@@ -26,5 +29,7 @@
 </script>
 
 <style scoped>
-
+    /deep/ .el-submenu .el-menu-item{
+        padding-left: 60px;
+    }
 </style>
