@@ -3,6 +3,7 @@ export default {
     state: {
         list: [
             {
+                id:"",
                 label: '首页',
                 value: '/index/home',
                 active: true
@@ -20,7 +21,7 @@ export default {
             });
 
             if (index < 0) {
-                if (item.value == '/') {
+                if (item.value == '/index/home') {
                     item.label = '首页';
                 }
 
@@ -35,10 +36,12 @@ export default {
 
         DEL_PROCESS(state, index) {
             state.list.splice(index, 1);
+            // state.list[state.list.length - 1].active = true;
         },
 
         SET_PROCESS(state, list) {
             state.list = list;
+            // state.list[state.list.length - 1].active = true;
         },
 
         RESET_PROCESS(state) {

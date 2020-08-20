@@ -1,256 +1,266 @@
 <!--prosess  2020.07.29 @王浩然QQ378237242-->
 <template>
-	<div class="scope-process">
-		<scroll>
-			<div
-				class="block"
-				v-for="(item, index) in processList"
-				:key="index"
-				:class="{ active: item.active }"
-				:data-index="index"
-				@mousedown="
+    <div class="scope-process">
+        <scroll>
+            <div
+                    class="block"
+                    v-for="(item, index) in processList"
+                    :key="index"
+                    :class="{ active: item.active }"
+                    :data-index="index"
+                    @mousedown="
 					e => {
 						onTap(e, item);
 					}
 				"
-			>
-				<span>{{ item.label }}</span>
+            >
+                <span>{{ item.label }}</span>
 
-				<i
-					class="el-icon-close"
-					v-if="index > 0"
-					:class="{ active: index > 0 }"
-					@mousedown.stop="onDel(index)"
-				></i>
-			</div>
-		</scroll>
+                <i
+                        class="el-icon-close"
+                        v-if="index > 0"
+                        @mousedown.stop="onDel(index)"
+                ></i>
+            </div>
+        </scroll>
 
-		<ul
-			class="context-menu"
-			v-show="menu.visible"
-			:style="menu.style"
-		>
-			<li
-				@click="onClose('current')"
-				v-if="isHit"
-			>关闭当前</li>
-			<li @click="onClose('other')">关闭其他</li>
-			<li @click="onClose('all')">关闭所有</li>
-		</ul>
-	</div>
+        <ul
+                class="context-menu"
+                v-show="menu.visible"
+                :style="menu.style"
+        >
+            <li
+                    @click="onClose('current')"
+                    v-if="isHit"
+            >关闭当前
+            </li>
+            <li @click="onClose('other')">关闭其他</li>
+            <li @click="onClose('all')">关闭所有</li>
+        </ul>
+    </div>
 </template>
 
 <script>
-import { mapGetters, mapMutations } from "vuex";
-import scroll from "@/components/scroll/index.vue";
-export default {
-	data() {
-		return {
-			menu: {
-				visible: false,
-				current: {},
-				style: {
-					left: 0,
-					top: 0,
-				},
-			},
+    import {mapGetters, mapMutations} from "vuex";
+    import PubSub from "pubsub-js"
+    import scroll from "@/components/scroll/index.vue";
 
-			isHit: false,
+    export default {
+        data() {
+            return {
+                menu: {
+                    visible: false,
+                    current: {},
+                    style: {
+                        left: 0,
+                        top: 0,
+                    },
+                },
 
-			page: 1,
-		};
-	},
-	components: {
-		scroll,
-	},
-	computed: {
-		...mapGetters(["processList"]),
-	},
+                isHit: false,
 
-	watch: {
-		processList() {
-			let maxWidth = this.$el.clientWidth;
+                page: 1,
+            };
+        },
+        components: {
+            scroll,
+        },
+        computed: {
+            ...mapGetters(["processList"]),
+        },
 
-			this.$nextTick(() => {
-				let list = this.$el.querySelectorAll(".block") || [];
+        watch: {
+            processList() {
+                let maxWidth = this.$el.clientWidth;
 
-				let sumWidth = 0;
+                this.$nextTick(() => {
+                    let list = this.$el.querySelectorAll(".block") || [];
 
-				for (let i = 0; i < list.length; i++) {
-					sumWidth += list[i].clientWidth;
-				}
+                    let sumWidth = 0;
 
-				if (maxWidth - sumWidth > 1000) {
-					this.page += 1;
-				}
-			});
-		},
-	},
+                    for (let i = 0; i < list.length; i++) {
+                        sumWidth += list[i].clientWidth;
+                    }
 
-	mounted() {
-		this.$el.oncontextmenu = () => {
-			event.returnValue = false;
-		};
+                    if (maxWidth - sumWidth > 1000) {
+                        this.page += 1;
+                    }
+                });
+            },
+        },
 
-		document.body.addEventListener("click", () => {
-			if (this.menu.visible) {
-				this.menu.visible = false;
-			}
-		});
-	},
+        mounted() {
+            this.$el.oncontextmenu = () => {
+                event.returnValue = false;
+            };
 
-	methods: {
-		...mapMutations("process",["ADD_PROCESS", "DEL_PROCESS", "SET_PROCESS"]),
+            document.body.addEventListener("click", () => {
+                if (this.menu.visible) {
+                    this.menu.visible = false;
+                }
+            });
+        },
 
-		onTap(e, item) {
-			this.isHit = item.active;
+        methods: {
+            ...mapMutations("process", ["ADD_PROCESS", "DEL_PROCESS", "SET_PROCESS"]),
 
-			if (e.button == 0) {
-				this.$router.push(item.value);
-			} else {
-				this.menu = {
-					current: item,
-					visible: true,
-					style: {
-						left: e.layerX + "px",
-						top: e.layerY + "px",
-					},
-				};
-			}
-		},
+            onTap(e, item) {
+                this.isHit = item.active;
+                if (e.button == 0) {
+                    this.ADD_PROCESS(item);
+                    // PubSub.publish("defaultActive",item.value);
+                    this.$router.push(item.value);
+                } else {
+                    this.menu = {
+                        current: item,
+                        visible: true,
+                        style: {
+                            left: e.layerX + "px",
+                            top: e.layerY + "px",
+                        },
+                    };
+                }
+            },
 
-		onDel(index) {
-			this.DEL_PROCESS(index);
+            onDel(index) {
+                this.DEL_PROCESS(index);
 
-			this.toPath();
-		},
+                this.toPath();
+            },
 
-		onClose(cmd) {
-			const { current } = this.menu;
+            onClose(cmd) {
+                const {current} = this.menu;
 
-			switch (cmd) {
-				case "current":
-					this.onDel(
-						this.processList.findIndex(
-							(e) => e.value == current.value
-						)
-					);
-					break;
+                switch (cmd) {
+                    case "current":
+                        this.onDel(
+                            this.processList.findIndex(
+                                (e) => e.value == current.value
+                            )
+                        );
+                        break;
 
-				case "other":
-					this.SET_PROCESS(
-						this.processList.filter(
-							(e) => e.value == current.value || e.value == "/"
-						)
-					);
-					break;
+                    case "other":
+                        this.SET_PROCESS(
+                            this.processList.filter(
+                                (e) => e.value == current.value || e.value == "/index/home"
+                            )
+                        );
+                        break;
 
-				case "all":
-					this.SET_PROCESS(
-						this.processList.filter((e) => e.value == "/")
-					);
-					break;
-			}
+                    case "all":
+                        this.SET_PROCESS(
+                            this.processList.filter((e) => e.value == "/index/home")
+                        );
+                        break;
+                }
 
-			this.toPath();
-		},
+                this.toPath();
+            },
 
-		toPath() {
-			const active = this.processList.find((e) => e.active);
+            toPath() {
+                const active = this.processList.find((e) => e.active);
 
-			if (!active) {
-				const next = this.processList[this.processList.length - 1];
-				this.$router.push(next ? next.value : "/");
-			}
-		},
-	},
-};
+                if (!active) {
+                    this.processList[this.processList.length - 1].active = true;
+                    const next = this.processList[this.processList.length - 1];
+                    this.$router.push(next ? next.value : "/index/home");
+                }
+            },
+        },
+    };
 </script>
 
 <style lang='less' scoped>
-@color: #008ad3;
-.scope-process {
-	display: flex;
-	height: 30px;
-	position: relative;
+    @color: #409EFF;
+    .scope-process {
+        display: flex;
+        height: 30px;
+        position: relative;
 
-	.cl-scroll {
-		flex: 1;
+        .cl-scroll {
+            flex: 1;
 
-		> .scroll-wrapper {
-			display: flex;
-		}
-	}
+            > .scroll-wrapper {
+                display: flex;
+            }
+        }
 
-	.block {
-		border-radius: 3px;
-		height: 30px;
-		line-height: 30px;
-		padding: 0 10px;
-		background-color: #fff;
-		font-size: 12px;
-		margin-right: 10px;
-		color: #909399;
-		cursor: pointer;
-		:last-child {
-			margin-right: 0;
-		}
+        .block {
+            border-radius: 3px;
+            height: 30px;
+            line-height: 30px;
+            padding: 0 10px;
+            background-color: #fff;
+            font-size: 12px;
+            margin-right: 10px;
+            color: #909399;
+            cursor: pointer;
 
-		i {
-			font-size: 14px;
-			position: relative;
-			top: 2px;
-			width: 0;
-			overflow: hidden;
-			transition: all 0.3s;
+            :last-child {
+                margin-right: 0;
+            }
 
-			:hover {
-				color: red;
-			}
-		}
+            :hover + i {
+                width: auto;
+                margin-left: 5px;
+            }
 
-		:hover {
-			.el-icon-close {
-				width: auto;
-				margin-left: 5px;
-			}
-		}
-		.active {
-			color: @color;
+            i {
+                font-size: 14px;
+                position: relative;
+                top: 2px;
+                width: 0;
+                overflow: hidden;
+                transition: all 0.3s;
 
-			i {
-				width: auto;
-				margin-left: 5px;
-			}
+            }
 
-			:before {
-				background-color: @color;
-			}
-		}
-	}
 
-	.context-menu {
-		margin: 0;
-		background: #fff;
-		z-index: 100;
-		position: absolute;
-		list-style-type: none;
-		padding: 5px 0;
-		border-radius: 4px;
-		font-size: 12px;
-		font-weight: 400;
-		color: #333;
-		box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
+        }
 
-		li {
-			margin: 0;
-			padding: 7px 16px;
-			cursor: pointer;
+        .active {
+            color: @color;
 
-			:hover {
-				background: #eee;
-			}
-		}
-	}
-}
+            i {
+                width: auto;
+                margin-left: 5px;
+            }
+
+        }
+
+
+        .context-menu {
+            margin: 0;
+            background: #fff;
+            z-index: 100;
+            position: absolute;
+            list-style-type: none;
+            padding: 5px 0;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 400;
+            color: #333;
+            box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
+
+            li {
+                margin: 0;
+                padding: 7px 16px;
+                cursor: pointer;
+
+                :hover {
+                    background: #eee;
+                }
+            }
+        }
+    }
+    .scope-process .block i:hover {
+        color: red;
+    }
+
+    .scope-process .block:hover .el-icon-close {
+        width: auto;
+        margin-left: 5px;
+    }
+
 </style>

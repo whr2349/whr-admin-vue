@@ -4,7 +4,6 @@ import Home from "@/views/home/home.vue"
 import {_CONSTANTS_ROUTERS, _CONSTANTSMAIN_ROUTERS} from "@/router/index.js"
 import router from "@/router/index.js"
 import {deTree ,toJSON} from "../../utils/utils"
-import store from "../index";
 
 const user = {
     namespaced: true,
@@ -29,13 +28,10 @@ const user = {
             state.route  = route;
         },
         SET_ADDROUTERS: (state, route) => {
-            console.log("_CONSTANTSMAIN_ROUTERS:",_CONSTANTSMAIN_ROUTERS);
-
             for(let i of route){
                 _CONSTANTSMAIN_ROUTERS.children.push(i)
             }
             state.addRouters.push(_CONSTANTSMAIN_ROUTERS);
-            console.log(" state.addRouters:", state.addRouters);
             // router.options.routes.push(state.addRouters);
             router.addRoutes(state.addRouters);
         }
@@ -51,18 +47,14 @@ const user = {
         login({commit}, userInfo) {
             return new Promise((resolve, reject) => {
                 login(userInfo).then(res => {
-                    console.log(res)
                     if (res.code == 0) {
                         let route = deTree(res.data.route);
                         commit('SET_TOKEN', res.data.token);
                         commit('SET_USERINFO', res.data.user);
                         commit('SET_MENUS', res.data.menus);
                         commit('SET_ROUTE', route);
-                        //
-                        debugger
                         let asyncRouters = filterAsyncRouter(route);
                         commit("SET_ADDROUTERS", asyncRouters);
-
                         localStorage.setItem('Authorization', res.data.token);
                         localStorage.setItem('userInfo', JSON.stringify(res.data.user));
                         localStorage.setItem('menus', JSON.stringify(res.data.menus));

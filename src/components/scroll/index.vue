@@ -89,6 +89,7 @@ export default {
 	width: 100%;
 
 	.scroll-wrapper {
+		display: flex;
 		position: absolute;
 	}
 }

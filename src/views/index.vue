@@ -24,7 +24,15 @@
                 </div>
             </div>
             <div class="whr-side-menu">
-                <menutree :menu="somenu"></menutree>
+                <el-menu
+                        class="el-menu-vertical-demo"
+                        :router="true"
+                        :default-active="$route.path"
+                >
+                    <menutree :menu="somenu"></menutree>
+
+                </el-menu>
+
             </div>
         </div>
         <div class="whr-wrapper-right">
@@ -33,6 +41,7 @@
                     <el-menu
                             class="el-menu-demo"
                             mode="horizontal"
+
                     >
                         <el-menu-item :index="item.route" v-for="(item,index) in menus" :key="index"
                                       @click="toSideMenu(item.children)">
@@ -60,7 +69,7 @@
     import prosess from "@/views/layout/process"
     import menutree from "./layout/menutree/menutree"
     import PubSub from "pubsub-js"
-    import {mapGetters} from 'vuex'
+    import {mapGetters,mapMutations} from 'vuex'
 
     export default {
         components: {
@@ -68,7 +77,7 @@
         },
         data() {
             return {
-                somenu: {},
+                somenu: [],
             }
         },
         computed: {
@@ -76,20 +85,20 @@
                 'userInfo',
                 'menus',
             ]),
-
-
         },
         mounted() {
-            PubSub.subscribe("gotuRouter", (msg, data) => {
-                debugger
-                this.$router.push(data)
+            PubSub.subscribe("addProcess", (msg, item) => {
+                let a = {}
+                a.label = item.menu_name, a.value = item.route, a.active = true
+                this.ADD_PROCESS(a)
             })
-            this.toSideMenu(this.menus[0].children);
+            // this.toSideMenu(this.menus[0].children);
 
         },
         methods: {
-            toSideMenu(menu) {
-                this.somenu = menu;
+            ...mapMutations("process",["ADD_PROCESS", "DEL_PROCESS", "SET_PROCESS"]),
+            toSideMenu(id) {
+                this.somenu = id
             }
         }
     };
